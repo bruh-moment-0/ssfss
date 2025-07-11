@@ -1,4 +1,4 @@
-# ssfss
+# ssfss version 3.0
 super secure file storage system, uses advanced encryption standard in galois/counter mode (aes-gcm) with argon2id for secure text, file and folder encryption, featuring a graphical user interface.
 
 ## features  
