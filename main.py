@@ -14,7 +14,7 @@ import zlib
 import json
 import os
 
-VERSION = 3.0
+VERSION = 3.1
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
 SALT_LENGTH = 16
 NONCE_LENGTH = 12
@@ -617,7 +617,10 @@ def foenc():
         messagebox.showerror("error", "no master key selected")
         appendscroll(folderscroll, "error: no master key selected", True, True)
         return
-    infolderpath = filedialog.askdirectory(title="select folder", initialdir=BASEDIR)
+    infolderpath = filedialog.askdirectory(
+        title="select folder",
+        initialdir=BASEDIR
+    )
     if not infolderpath:
         messagebox.showerror("error", "no folder selected")
         appendscroll(folderscroll, "error: no folder selected", True, True)
@@ -659,11 +662,11 @@ def foenc():
         for encname, data in encrypted_tree.items():
             relpath = decryptAESGCM(encname, password, data["saltname"], data["noncename"])
             size = _human(len(base64.b64decode(data["blob"])))
-            appendscroll(folderscroll, f"Encrypted: {relpath} ({size})", True, True)
+            appendscroll(folderscroll, f"encrypted: {relpath} ({size})", True, True)
         result = {
             "data": encrypted_tree,
             "key": os.path.basename(skeypath),
-            "name": os.path.basename(infolderpath),
+            "name": "ssfss:unused",
             "app": "ssfss",
             "type": "ss2f",
             "ver": VERSION,
@@ -716,7 +719,10 @@ def fodec():
         return
     if data.get('ver') != VERSION:
         messagebox.showwarning("warning", f"version mismatch (file: {data['ver']}, app: {VERSION})")
-    dest_folder = filedialog.askdirectory(title="select destination folder")
+    dest_folder = filedialog.askdirectory(
+        title="select destination folder",
+        initialdir=BASEDIR
+    )
     if not dest_folder:
         messagebox.showerror("error", "no destination folder selected")
         appendscroll(folderscroll, "error: no destination folder selected", True, True)
@@ -744,7 +750,7 @@ def fodec():
                 with open(outpath, 'wb') as f:
                     f.write(file_data)
                 size_str = _human(len(file_data))
-                appendscroll(folderscroll, f"Decrypted: {outpath} ({size_str})", True, True)
+                appendscroll(folderscroll, f"decrypted: {outpath} ({size_str})", True, True)
                 progress['completed'] += 1
             except Exception as e:
                 messagebox.showerror("error", f"error decrypting a file: {e}")
@@ -851,11 +857,13 @@ infoscrolltext = (
     "REMEMBER: Silence means security, loose lips might sink ships! (OPSEC)\n"
     "this program is not licensed. use it at your will.\n"
     "CHANGE LOGS:\n"
+    "v3.1 - changed the folder encryption logic a bit, the old one told the base folders name in plaintext, but due to tkinter limitations,\n"
+    "       the 'name' key on .ss2f files are unused.\n"
     "v3.0 - changed the password hashing algorithm to argon2id, before it was PBKDF2, this made the encryption more safer.\n"
-    "       now bruteforcing is even more impossible\n"
-    "v2.0 - added name encryption to .ss1f and .ss2f, this makes the encryption better, as now guessing what the file is impossible\n"
-    "       fixed some problems\n"
-    "v1.0 - program released"
+    "       now bruteforcing is even more impossible.\n"
+    "v2.0 - added name encryption to .ss1f and .ss2f, this makes the encryption better, as now guessing what the file is impossible.\n"
+    "       fixed some problems.\n"
+    "v1.0 - program released."
 )
 writescroll(infoscroll, infoscrolltext, True)
 loop()
