@@ -1,5 +1,5 @@
-# ssfss version 3.1
-super secure file storage system, uses advanced encryption standard in galois/counter mode (aes-gcm) with argon2id for secure text, file and folder encryption, featuring a graphical user interface.
+# ssfss version 3.2
+super secure file storage system, uses advanced encryption standard in galois/counter mode (aes-gcm) with argon2id for secure text, file and folder encryption, featuring a graphical user interface. see the update logs from the information area in the program.
 
 ## features  
 - highly secure – if you protect your `.skey` and its master key, not even the cia, fbi, nsa, or any other entity can decrypt your data
@@ -8,6 +8,7 @@ super secure file storage system, uses advanced encryption standard in galois/co
 - customizable ui – some gui elements can be modified.  
 - flexible encryption – encrypts messages, files, or entire folders.  
 - privacy-focused – no hidden info-stealers or shady backdoors.
+- tamper-protected – refuses to work if the program is tampered.
 
 ## how to run it?
 1. install python (minimum requirement: python 3.6) from [python.org](https://www.python.org/downloads/).  
