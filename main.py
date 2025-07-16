@@ -6,6 +6,8 @@ from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
 from pathlib import Path
 import threading
+import warnings
+import hashlib
 import secrets
 import base64
 import string
@@ -14,12 +16,49 @@ import zlib
 import json
 import os
 
+# make the line bellow to "DISABLE_INTEGRITY_CHECK = True" to disable integrity check (NOT RECOMMENDED FOR SAFETY/TAMPERING)
+DISABLE_INTEGRITY_CHECK = False
 VERSION = 3.1
-BASEDIR = os.path.dirname(os.path.abspath(__file__))
+SELFPATH = os.path.abspath(__file__)
+BASEDIR = os.path.dirname(SELFPATH)
+DATAPATH = os.path.join(BASEDIR, "data")
 SALT_LENGTH = 16
 NONCE_LENGTH = 12
 KEY_LENGTH = 32
 KDF_ITERATIONS = 100_000
+
+def hashfile(path):
+    with open(path, 'rb') as f:
+        data = f.read()
+    return hashlib.sha256(data).hexdigest()
+
+def read(file_path):
+    with open(file_path, 'r') as file:
+        return file.read()
+
+def write(file_path, data):
+    with open(file_path, 'w') as file:
+        file.write(data)
+
+class DataFileNotExist(Warning):
+    pass
+
+def integritycheck(disable=False):
+    if not disable:
+        if os.path.isfile(DATAPATH):
+            data = read(DATAPATH)
+            currenthash = hashfile(SELFPATH)
+            if data == currenthash:
+                return
+            else:
+                raise Exception(f'integrity check failed. the data file at "{DATAPATH}" or script "{SELFPATH}" is tampered. it is advised to stop using this program immediately. get a new copy from: https://github.com/bruh-moment-0/ssfss')
+        else:
+            warnings.warn(f'the data file does not exist. creating...', DataFileNotExist)
+            currenthash = hashfile(SELFPATH)
+            write(DATAPATH, currenthash)
+            return
+
+integritycheck(DISABLE_INTEGRITY_CHECK)
 
 def keygen(length_bytes=32):
     key_bytes = secrets.token_bytes(length_bytes)
@@ -178,14 +217,6 @@ def readbin64(filename):
     with open(filename, 'rb') as file:
         data = base64.b64encode(file.read()).decode('utf-8')
     return data
-
-def read(file_path):
-    with open(file_path, 'r') as file:
-        return file.read()
-
-def write(file_path, data):
-    with open(file_path, 'w') as file:
-        file.write(data)
 
 def text2byte(text):
     byte = text.encode('utf-8')
@@ -770,8 +801,8 @@ fileframe = Frame(root)
 folderframe = Frame(root)
 infoframe = Frame(root)
 fontsize = IntVar(value=11)
-height = IntVar(value=20)
-width = IntVar(value=80)
+height = IntVar(value=25)
+width = IntVar(value=100)
 masterkeyvar = StringVar()
 keypath = StringVar(value=".skey path")
 root.title(f"ssfss v{VERSION}")
@@ -818,7 +849,7 @@ passwordforgetbtn = Button(root, text="forget master key & .skey", command=skeyf
 passwordforgetbtn.grid(row=5, column=4)
 
 Label(textframe, text="text encryption, .sstf (super secure text file)").grid(row=0, column=0, columnspan=4)
-textscroll = scrolledtext.ScrolledText(textframe, wrap=WORD, width=80, height=20, font=("Consolas", 11))
+textscroll = scrolledtext.ScrolledText(textframe, wrap=WORD, width=100, height=25, font=("Consolas", 11))
 textscroll.grid(row=1, column=0, columnspan=4)
 savetextbtn = Button(textframe, text="encrypt .sstf", command=teenc)
 savetextbtn.grid(row=2, column=0, columnspan=2)
@@ -832,7 +863,7 @@ lenent.grid(row=3, column=2)
 Label(textframe, text="chars").grid(row=3, column=3)
 
 Label(fileframe, text="file encryption, .ss1f (super secure singular file)").grid(row=0, column=0, columnspan=2)
-filescroll = scrolledtext.ScrolledText(fileframe, state=DISABLED, wrap=WORD, width=80, height=20, font=("Consolas", 11))
+filescroll = scrolledtext.ScrolledText(fileframe, state=DISABLED, wrap=WORD, width=100, height=25, font=("Consolas", 11))
 filescroll.grid(row=1, column=0, columnspan=2)
 savefilebtn = Button(fileframe, text="encrypt .ss1f", command=fienc)
 savefilebtn.grid(row=2, column=0)
@@ -840,7 +871,7 @@ loadfilebtn = Button(fileframe, text="decrypt .ss1f", command=fidec)
 loadfilebtn.grid(row=2, column=1)
 
 Label(folderframe, text="folder encryption, .ss2f (super secure multiple/folder file)").grid(row=0, column=0, columnspan=2)
-folderscroll = scrolledtext.ScrolledText(folderframe, state=DISABLED, wrap=WORD, width=80, height=20, font=("Consolas", 11))
+folderscroll = scrolledtext.ScrolledText(folderframe, state=DISABLED, wrap=WORD, width=100, height=25, font=("Consolas", 11))
 folderscroll.grid(row=1, column=0, columnspan=2)
 savefolderbtn = Button(folderframe, text="encrypt .ss2f", command=foenc)
 savefolderbtn.grid(row=2, column=0)
@@ -848,21 +879,24 @@ loadfolderbtn = Button(folderframe, text="decrypt .ss2f", command=fodec)
 loadfolderbtn.grid(row=2, column=1)
 
 Label(infoframe, text="information").grid(row=0, column=0)
-infoscroll = scrolledtext.ScrolledText(infoframe, state=DISABLED, wrap=WORD, width=80, height=20, font=("Consolas", 11))
+infoscroll = scrolledtext.ScrolledText(infoframe, state=DISABLED, wrap=WORD, width=100, height=25, font=("Consolas", 11))
 infoscroll.grid(row=1, column=0)
 infoscrolltext = (
-    "ssfss, super secure file storage system: https://github.com/bruh-moment-0/ssfss\n"
+    "ssfss, super secure file storage system: https://github.com/bruh-moment-0/ssfss \n\n"
     "supports text, file and folder encryption\n"
-    "uses aes 256 gcm argon2id and safe keys (.skey) to store keys. .skey's can only be unlocked with a master key that the user is supposed to keep safe\n"
+    "uses aes 256 gcm argon2id and safe keys (.skey) to store keys. .skey's can only be\n"
+    "unlocked with a master key that the user is supposed to keep safe\n"
     "REMEMBER: Silence means security, loose lips might sink ships! (OPSEC)\n"
-    "this program is not licensed. use it at your will.\n"
+    "this program and the codes are not licensed. use it at your will.\n\n"
     "CHANGE LOGS:\n"
-    "v3.1 - changed the folder encryption logic a bit, the old one told the base folders name in plaintext, but due to tkinter limitations,\n"
-    "       the 'name' key on .ss2f files are unused.\n"
-    "v3.0 - changed the password hashing algorithm to argon2id, before it was PBKDF2, this made the encryption more safer.\n"
-    "       now bruteforcing is even more impossible.\n"
-    "v2.0 - added name encryption to .ss1f and .ss2f, this makes the encryption better, as now guessing what the file is impossible.\n"
-    "       fixed some problems.\n"
+    "v3.2 - added integrity check functions for tampering protection\n"
+    "v3.1 - changed the folder encryption logic a bit, the old one told the base\n"
+    "       folders name in plaintext, but due to tkinter limitations, the 'name'\n"
+    "       key on .ss2f files are unused.\n"
+    "v3.0 - changed the password hashing algorithm to argon2id, before it was PBKDF2,\n"
+    "       this made the encryption more safer. now bruteforcing is even more impossible.\n"
+    "v2.0 - added name encryption to .ss1f and .ss2f, this makes the encryption better,\n"
+    "       as now guessing what the file is impossible. fixed some problems.\n"
     "v1.0 - program released."
 )
 writescroll(infoscroll, infoscrolltext, True)
